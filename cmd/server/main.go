@@ -26,6 +26,12 @@ func main() {
 		return
 	}
 
+	_, _, err = pubsub.DeclareAndBind(conn, routing.ExchangePerilTopic, routing.GameLogSlug, fmt.Sprintf("%v.*", routing.GameLogSlug), pubsub.SimpleQueueDurable)
+	if err != nil {
+		fmt.Println("Error creating durable game_logs queue", err)
+		return
+	}
+
 	gamelogic.PrintServerHelp()
 
 	for {
