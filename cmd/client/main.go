@@ -45,12 +45,20 @@ func main() {
 	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic,
 		fmt.Sprintf("%s.%s", routing.ArmyMovesPrefix, userName),
 		fmt.Sprintf("%s.*", routing.ArmyMovesPrefix), pubsub.SimpleQueueTransient,
-		handlerMove(gs))
+		handlerMove(gs, ch))
 	if err != nil {
 		fmt.Println("Error subscribing: ", err)
 		return
 	}
 
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic,
+		"war",
+		fmt.Sprintf("%s.*", routing.WarRecognitionsPrefix), pubsub.SimpleQueueDurable,
+		handlerWar(gs))
+	if err != nil {
+		fmt.Println("Error subscribing: ", err)
+		return
+	}
 	for {
 		input := gamelogic.GetInput()
 		if len(input) == 0 {
