@@ -54,7 +54,7 @@ func main() {
 	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic,
 		"war",
 		fmt.Sprintf("%s.*", routing.WarRecognitionsPrefix), pubsub.SimpleQueueDurable,
-		handlerWar(gs))
+		handlerWar(gs, ch))
 	if err != nil {
 		fmt.Println("Error subscribing: ", err)
 		return
