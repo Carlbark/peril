@@ -26,11 +26,17 @@ func main() {
 		return
 	}
 
-	_, _, err = pubsub.DeclareAndBind(conn, routing.ExchangePerilTopic, routing.GameLogSlug, fmt.Sprintf("%v.*", routing.GameLogSlug), pubsub.SimpleQueueDurable)
-	if err != nil {
-		fmt.Println("Error creating durable game_logs queue", err)
-		return
-	}
+	err = pubsub.SubscribeGob(conn, routing.ExchangePerilTopic, routing.GameLogSlug, fmt.Sprintf("%v.*", routing.GameLogSlug), pubsub.SimpleQueueDurable,
+		func(gl routing.GameLog) pubsub.AckType {
+
+			defer fmt.Print("> ")
+			err := gamelogic.WriteLog(gl)
+			if err != nil {
+				return pubsub.NackRequeue
+			}
+			return pubsub.Ack
+		},
+	)
 
 	gamelogic.PrintServerHelp()
 

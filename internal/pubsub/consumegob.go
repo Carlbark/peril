@@ -1,7 +1,8 @@
 package pubsub
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"fmt"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -15,7 +16,7 @@ const (
 	NackDiscard
 )
 
-func SubscribeJSON[T any](
+func SubscribeGob[T any](
 	conn *amqp.Connection,
 	exchange,
 	queueName,
@@ -28,6 +29,11 @@ func SubscribeJSON[T any](
 	if err != nil {
 		return err
 	}
+	err = ch.Qos(10, 0, false)
+	if err != nil {
+		return err
+	}
+
 	deliveries, err := ch.Consume(queue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return err
@@ -36,8 +42,10 @@ func SubscribeJSON[T any](
 		defer ch.Close()
 		for delivery := range deliveries {
 			var target T
-			if err := json.Unmarshal(delivery.Body, &target); err != nil {
-				fmt.Printf("could not unmarshal: %v\n", err)
+			dec := gob.NewDecoder(bytes.NewReader(delivery.Body))
+
+			if err := dec.Decode(&target); err != nil {
+				fmt.Printf("could not decode: %v\n", err)
 				continue
 			}
 			ackType := handler(target)

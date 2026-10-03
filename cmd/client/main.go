@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -91,7 +92,24 @@ func main() {
 			case "help":
 				gamelogic.PrintClientHelp()
 			case "spam":
-				fmt.Println("Spamming not allowed yet!")
+				if len(input) < 2 {
+					fmt.Println("Need to input number!")
+					continue
+				}
+				times, err := strconv.Atoi(input[1])
+				if err != nil {
+					fmt.Println("second word not a number")
+					continue
+				}
+				for i := 1; i <= times; i++ {
+					msg := gamelogic.GetMaliciousLog()
+					err := PublishGLog(ch, msg, gs.GetUsername())
+					if err != nil {
+						fmt.Println("Error publishing log")
+						break
+					}
+				}
+
 			case "quit":
 				gamelogic.PrintQuit()
 				return
